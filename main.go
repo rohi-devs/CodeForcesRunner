@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -148,9 +147,11 @@ func diffLines(expected, actual string) {
 	expLines := strings.Split(expected, "\n")
 	actLines := strings.Split(actual, "\n")
 
-	fmt.Println("╔══════════════════════╦══════════════════════╗")
-	fmt.Println("║    Expected (-)      ║     Actual (+)       ║")
-	fmt.Println("╠══════════════════════╬══════════════════════╣")
+	const width = 40
+	sep := strings.Repeat("═", width)
+	fmt.Printf("╔%s╦%s╗\n", sep, sep)
+	fmt.Printf("║ %-*s ║ %-*s ║\n", width-2, "Expected (-)", width-2, "Actual (+)")
+	fmt.Printf("╠%s╬%s╣\n", sep, sep)
 
 	max := len(expLines)
 	if len(actLines) > max {
@@ -166,24 +167,27 @@ func diffLines(expected, actual string) {
 			a = actLines[i]
 		}
 		if e != a {
-			printColoredRow(e, a)
+			printColoredRow(e, a, width-2)
 		} else {
-			fmt.Printf("║ %-22s ║ %-22s ║\n", e, a)
+			fmt.Printf("║ %-*s ║ %-*s ║\n", width-2, truncate(e, width-2), width-2, truncate(a, width-2))
 		}
 	}
 
-	fmt.Println("╚══════════════════════╩══════════════════════╝")
+	fmt.Printf("╚%s╩%s╝\n", sep, sep)
 }
 
-func printColoredRow(expected, actual string) {
+func printColoredRow(expected, actual string, width int) {
 	red := "\033[31m"
 	green := "\033[32m"
 	reset := "\033[0m"
 
-	e := fmt.Sprintf("%s%-22s%s", red, truncate(expected, 22), reset)
-	a := fmt.Sprintf("%s%-22s%s", green, truncate(actual, 22), reset)
+	truncE := truncate(expected, width)
+	truncA := truncate(actual, width)
 
-	fmt.Printf("║ %s ║ %s ║\n", e, a)
+	// ANSI codes do not consume width, so padding is safe
+	fmt.Printf("║ %s%-*s%s ║ %s%-*s%s ║\n",
+		red, width, truncE, reset,
+		green, width, truncA, reset)
 }
 
 func truncate(s string, max int) string {
@@ -227,3 +231,4 @@ func main() {
 		os.Exit(1)
 	}
 }
+
